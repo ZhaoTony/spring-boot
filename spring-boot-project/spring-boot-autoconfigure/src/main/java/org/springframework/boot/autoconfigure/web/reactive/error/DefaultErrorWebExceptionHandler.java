@@ -32,15 +32,17 @@ import org.springframework.boot.autoconfigure.web.ResourceProperties;
 import org.springframework.boot.web.reactive.error.ErrorAttributes;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RequestPredicate;
-import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.web.reactive.function.server.RequestPredicates.all;
+import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 /**
  * Basic global {@link org.springframework.web.server.WebExceptionHandler}, rendering
@@ -106,8 +108,8 @@ public class DefaultErrorWebExceptionHandler extends AbstractErrorWebExceptionHa
 	@Override
 	protected RouterFunction<ServerResponse> getRoutingFunction(
 			ErrorAttributes errorAttributes) {
-		return RouterFunctions.route(acceptsTextHtml(), this::renderErrorView)
-				.andRoute(RequestPredicates.all(), this::renderErrorResponse);
+		return route(acceptsTextHtml(), this::renderErrorView).andRoute(all(),
+				this::renderErrorResponse);
 	}
 
 	/**
@@ -121,18 +123,14 @@ public class DefaultErrorWebExceptionHandler extends AbstractErrorWebExceptionHa
 		HttpStatus errorStatus = getHttpStatus(error);
 		ServerResponse.BodyBuilder responseBody = ServerResponse.status(errorStatus)
 				.contentType(MediaType.TEXT_HTML);
-		Flux<ServerResponse> result = Flux
+		return Flux
 				.just("error/" + errorStatus.toString(),
 						"error/" + SERIES_VIEWS.get(errorStatus.series()), "error/error")
-				.flatMap((viewName) -> renderErrorView(viewName, responseBody, error));
-		if (this.errorProperties.getWhitelabel().isEnabled()) {
-			result = result.switchIfEmpty(renderDefaultErrorView(responseBody, error));
-		}
-		else {
-			Throwable ex = getError(request);
-			result = result.switchIfEmpty(Mono.error(ex));
-		}
-		return result.next().doOnNext((response) -> logError(request, errorStatus));
+				.flatMap((viewName) -> renderErrorView(viewName, responseBody, error))
+				.switchIfEmpty(this.errorProperties.getWhitelabel().isEnabled()
+						? renderDefaultErrorView(responseBody, error)
+						: Mono.error(getError(request)))
+				.next().doOnNext((response) -> logError(request, errorStatus));
 	}
 
 	/**
@@ -187,11 +185,16 @@ public class DefaultErrorWebExceptionHandler extends AbstractErrorWebExceptionHa
 	 */
 	protected RequestPredicate acceptsTextHtml() {
 		return (serverRequest) -> {
-			List<MediaType> acceptedMediaTypes = serverRequest.headers().accept();
-			acceptedMediaTypes.remove(MediaType.ALL);
-			MediaType.sortBySpecificityAndQuality(acceptedMediaTypes);
-			return acceptedMediaTypes.stream()
-					.anyMatch(MediaType.TEXT_HTML::isCompatibleWith);
+			try {
+				List<MediaType> acceptedMediaTypes = serverRequest.headers().accept();
+				acceptedMediaTypes.remove(MediaType.ALL);
+				MediaType.sortBySpecificityAndQuality(acceptedMediaTypes);
+				return acceptedMediaTypes.stream()
+						.anyMatch(MediaType.TEXT_HTML::isCompatibleWith);
+			}
+			catch (InvalidMediaTypeException ex) {
+				return false;
+			}
 		};
 	}
 

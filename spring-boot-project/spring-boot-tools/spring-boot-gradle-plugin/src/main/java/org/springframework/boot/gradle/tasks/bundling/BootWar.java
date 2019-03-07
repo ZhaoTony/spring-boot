@@ -51,8 +51,8 @@ public class BootWar extends War implements BootArchive {
 	public BootWar() {
 		getWebInf().into("lib-provided",
 				(copySpec) -> copySpec.from(
-						(Callable<Iterable<File>>) () -> this.providedClasspath == null
-								? Collections.emptyList() : this.providedClasspath));
+						(Callable<Iterable<File>>) () -> (this.providedClasspath != null)
+								? this.providedClasspath : Collections.emptyList()));
 	}
 
 	@Override
@@ -68,6 +68,13 @@ public class BootWar extends War implements BootArchive {
 
 	@Override
 	public String getMainClassName() {
+		if (this.mainClassName == null) {
+			String manifestStartClass = (String) getManifest().getAttributes()
+					.get("Start-Class");
+			if (manifestStartClass != null) {
+				setMainClassName(manifestStartClass);
+			}
+		}
 		return this.mainClassName;
 	}
 
@@ -113,15 +120,36 @@ public class BootWar extends War implements BootArchive {
 
 	/**
 	 * Adds files to the provided classpath to include in the {@code WEB-INF/lib-provided}
-	 * directory of the war. The given {@code classpath} are evaluated as per
+	 * directory of the war. The given {@code classpath} is evaluated as per
 	 * {@link Project#files(Object...)}.
 	 * @param classpath the additions to the classpath
 	 */
 	public void providedClasspath(Object... classpath) {
 		FileCollection existingClasspath = this.providedClasspath;
 		this.providedClasspath = getProject().files(
-				existingClasspath == null ? Collections.emptyList() : existingClasspath,
+				(existingClasspath != null) ? existingClasspath : Collections.emptyList(),
 				classpath);
+	}
+
+	/**
+	 * Sets the provided classpath to include in the {@code WEB-INF/lib-provided}
+	 * directory of the war.
+	 * @param classpath the classpath
+	 * @since 2.0.7
+	 */
+	public void setProvidedClasspath(FileCollection classpath) {
+		this.providedClasspath = getProject().files(classpath);
+	}
+
+	/**
+	 * Sets the provided classpath to include in the {@code WEB-INF/lib-provided}
+	 * directory of the war. The given {@code classpath} is evaluated as per
+	 * {@link Project#files(Object...)}.
+	 * @param classpath the classpath
+	 * @since 2.0.7
+	 */
+	public void setProvidedClasspath(Object classpath) {
+		this.providedClasspath = getProject().files(classpath);
 	}
 
 	@Override

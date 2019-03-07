@@ -22,17 +22,14 @@ import java.util.Collections;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.config.MeterFilter;
 
 import org.springframework.boot.util.LambdaSafe;
 
 /**
- * Configurer to apply {@link MeterRegistryCustomizer customizers},
- * {@link MeterFilter filters}, {@link MeterBinder binders} and {@link Metrics#addRegistry
- * global registration} to {@link MeterRegistry meter registries}. This configurer
- * intentionally skips {@link CompositeMeterRegistry} with the assumptions that the
- * registries it contains are beans and will be customized directly.
+ * Configurer to apply {@link MeterRegistryCustomizer customizers}, {@link MeterFilter
+ * filters}, {@link MeterBinder binders} and {@link Metrics#addRegistry global
+ * registration} to {@link MeterRegistry meter registries}.
  *
  * @author Jon Schneider
  * @author Phillip Webb
@@ -51,9 +48,9 @@ class MeterRegistryConfigurer {
 			Collection<MeterFilter> filters,
 			Collection<MeterRegistryCustomizer<?>> customizers,
 			boolean addToGlobalRegistry) {
-		this.binders = (binders != null ? binders : Collections.emptyList());
-		this.filters = (filters != null ? filters : Collections.emptyList());
-		this.customizers = (customizers != null ? customizers : Collections.emptyList());
+		this.binders = (binders != null) ? binders : Collections.emptyList();
+		this.filters = (filters != null) ? filters : Collections.emptyList();
+		this.customizers = (customizers != null) ? customizers : Collections.emptyList();
 		this.addToGlobalRegistry = addToGlobalRegistry;
 	}
 

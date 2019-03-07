@@ -400,9 +400,13 @@ identifier for you and also sets up HTTP routes. Add a Java app to the project a
 it empty and then use the https://cloud.google.com/sdk/downloads[Google Cloud SDK] to
 push your Spring Boot app into that slot from the command line or CI build.
 
-App Engine needs you to create an `app.yaml` file to describe the resources your app
-requires. Normally, you put this file in `src/main/appengine`, and it should resemble the
-following file:
+App Engine Standard requires you to use WAR packaging. Follow
+https://github.com/GoogleCloudPlatform/getting-started-java/blob/master/appengine-standard-java8/springboot-appengine-standard/README.md[these steps]
+to deploy App Engine Standard application to Google Cloud.
+
+Alternatively, App Engine Flex requires you to create an `app.yaml` file to describe
+the resources your app requires. Normally, you put this file in `src/main/appengine`,
+and it should resemble the following file:
 
 [source,yaml,indent=0]
 ----
@@ -446,15 +450,11 @@ build configuration, as shown in the following example:
 Then deploy with `mvn appengine:deploy` (if you need to authenticate first, the build
 fails).
 
-NOTE: Google App Engine Classic is tied to the Servlet 2.5 API, so you cannot deploy a
-Spring Application there without some modifications. See the
-<<howto.adoc#howto-servlet-2-5,Servlet 2.5 section>> of this guide.
-
 
 
 [[deployment-install]]
 == Installing Spring Boot Applications
-In additional to running Spring Boot applications by using `java -jar`, it is also
+In addition to running Spring Boot applications by using `java -jar`, it is also
 possible to make fully executable applications for Unix systems. A fully executable jar
 can be executed like any other executable binary or it can be
 <<deployment-service,registered with `init.d` or `systemd`>>. This makes it very easy to
@@ -674,7 +674,9 @@ description up front (and it need not change), you may as well provide it when t
 generated.
 
 To customize written elements, use the `embeddedLaunchScriptProperties` option of the
-Spring Boot Maven or Gradle plugins.
+Spring Boot Maven plugin or the
+{spring-boot-gradle-plugin-reference}/#packaging-executable-configuring-launch-script[`properties`
+property of the Spring Boot Gradle plugin's `launchScript`].
 
 The following property substitutions are supported with the default script:
 
@@ -847,7 +849,7 @@ application.
 
 [[deployment-whats-next]]
 == What to Read Next
-Check out the https://www.cloudfoundry.com/[Cloud Foundry],
+Check out the https://www.cloudfoundry.org/[Cloud Foundry],
 https://www.heroku.com/[Heroku], https://www.openshift.com[OpenShift], and
 https://boxfuse.com[Boxfuse] web sites for more information about the kinds of features
 that a PaaS can offer. These are just four of the most popular Java PaaS providers. Since

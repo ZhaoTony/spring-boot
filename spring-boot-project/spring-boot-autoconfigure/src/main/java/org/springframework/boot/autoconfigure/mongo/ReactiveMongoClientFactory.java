@@ -54,8 +54,8 @@ public class ReactiveMongoClientFactory {
 			List<MongoClientSettingsBuilderCustomizer> builderCustomizers) {
 		this.properties = properties;
 		this.environment = environment;
-		this.builderCustomizers = (builderCustomizers != null ? builderCustomizers
-				: Collections.emptyList());
+		this.builderCustomizers = (builderCustomizers != null) ? builderCustomizers
+				: Collections.emptyList();
 	}
 
 	/**
@@ -86,8 +86,8 @@ public class ReactiveMongoClientFactory {
 	private MongoClient createEmbeddedMongoClient(MongoClientSettings settings,
 			int port) {
 		Builder builder = builder(settings);
-		String host = this.properties.getHost() == null ? "localhost"
-				: this.properties.getHost();
+		String host = (this.properties.getHost() != null) ? this.properties.getHost()
+				: "localhost";
 		ClusterSettings clusterSettings = ClusterSettings.builder()
 				.hosts(Collections.singletonList(new ServerAddress(host, port))).build();
 		builder.clusterSettings(clusterSettings);
@@ -119,16 +119,16 @@ public class ReactiveMongoClientFactory {
 	}
 
 	private void applyCredentials(Builder builder) {
-		String database = this.properties.getAuthenticationDatabase() == null
-				? this.properties.getMongoClientDatabase()
-				: this.properties.getAuthenticationDatabase();
+		String database = (this.properties.getAuthenticationDatabase() != null)
+				? this.properties.getAuthenticationDatabase()
+				: this.properties.getMongoClientDatabase();
 		builder.credential((MongoCredential.createCredential(
 				this.properties.getUsername(), database, this.properties.getPassword())));
 
 	}
 
 	private <T> T getOrDefault(T value, T defaultValue) {
-		return (value == null ? defaultValue : value);
+		return (value != null) ? value : defaultValue;
 	}
 
 	private MongoClient createMongoClient(Builder builder) {
@@ -159,6 +159,7 @@ public class ReactiveMongoClientFactory {
 		if (connection.getApplicationName() != null) {
 			builder.applicationName(connection.getApplicationName());
 		}
+		builder.retryWrites(connection.getRetryWrites());
 		return builder;
 	}
 

@@ -83,16 +83,16 @@ class DataSourceInitializedPublisher implements BeanPostProcessor {
 	private DataSource findDataSource(EntityManagerFactory entityManagerFactory) {
 		Object dataSource = entityManagerFactory.getProperties()
 				.get("javax.persistence.nonJtaDataSource");
-		return (dataSource != null && dataSource instanceof DataSource
-				? (DataSource) dataSource : this.dataSource);
+		return (dataSource != null && dataSource instanceof DataSource)
+				? (DataSource) dataSource : this.dataSource;
 	}
 
 	private boolean isInitializingDatabase(DataSource dataSource) {
 		if (this.properties == null) {
 			return true; // better safe than sorry
 		}
-		Supplier<String> defaultDdlAuto = () -> EmbeddedDatabaseConnection
-				.isEmbedded(dataSource) ? "create-drop" : "none";
+		Supplier<String> defaultDdlAuto = () -> (EmbeddedDatabaseConnection
+				.isEmbedded(dataSource) ? "create-drop" : "none");
 		Map<String, Object> hibernate = this.properties
 				.getHibernateProperties(new HibernateSettings().ddlAuto(defaultDdlAuto));
 		if (hibernate.containsKey("hibernate.hbm2ddl.auto")) {

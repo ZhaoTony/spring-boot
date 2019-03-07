@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.core.AutoConfigureCache;
 import org.springframework.boot.test.autoconfigure.filter.TypeExcludeFilters;
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
@@ -73,6 +74,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @OverrideAutoConfiguration(enabled = false)
 @TypeExcludeFilters(WebFluxTypeExcludeFilter.class)
 @AutoConfigureCache
+@AutoConfigureJson
 @AutoConfigureWebFlux
 @AutoConfigureWebTestClient
 @ImportAutoConfiguration

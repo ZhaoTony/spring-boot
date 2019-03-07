@@ -70,9 +70,7 @@ public class BindConverterTests {
 
 	@Test
 	public void createWhenPropertyEditorInitializerIsNullShouldCreate() {
-		BindConverter bindConverter = new BindConverter(
-				ApplicationConversionService.getSharedInstance(), null);
-		assertThat(bindConverter).isNotNull();
+		new BindConverter(ApplicationConversionService.getSharedInstance(), null);
 	}
 
 	@Test
@@ -142,7 +140,6 @@ public class BindConverterTests {
 		Class<?> converted = bindConverter.convert("java.lang.RuntimeException",
 				ResolvableType.forClass(Class.class));
 		assertThat(converted).isEqualTo(RuntimeException.class);
-
 	}
 
 	@Test
@@ -168,7 +165,7 @@ public class BindConverterTests {
 				this::registerSampleTypeEditor);
 		List<SampleType> converted = bindConverter.convert("test",
 				ResolvableType.forClassWithGenerics(List.class, SampleType.class));
-		assertThat(converted).isNotEmpty();
+		assertThat(converted).hasSize(1);
 		assertThat(converted.get(0).getText()).isEqualTo("test");
 	}
 

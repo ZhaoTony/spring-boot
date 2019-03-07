@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 
 import org.apache.catalina.Container;
 import org.apache.catalina.Context;
@@ -41,6 +42,7 @@ import org.apache.catalina.SessionIdGenerator;
 import org.apache.catalina.Valve;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
+import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.core.StandardWrapper;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.util.CharsetMapper;
@@ -88,7 +90,8 @@ public class TomcatServletWebServerFactoryTests
 
 	@After
 	public void restoreTccl() {
-		ReflectionTestUtils.setField(TomcatURLStreamHandlerFactory.class, "instance", null);
+		ReflectionTestUtils.setField(TomcatURLStreamHandlerFactory.class, "instance",
+				null);
 		ReflectionTestUtils.setField(URL.class, "factory", null);
 		Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
 	}
@@ -120,9 +123,7 @@ public class TomcatServletWebServerFactoryTests
 	public void tomcatListeners() {
 		TomcatServletWebServerFactory factory = getFactory();
 		LifecycleListener[] listeners = new LifecycleListener[4];
-		for (int i = 0; i < listeners.length; i++) {
-			listeners[i] = mock(LifecycleListener.class);
-		}
+		Arrays.setAll(listeners, (i) -> mock(LifecycleListener.class));
 		factory.setContextLifecycleListeners(Arrays.asList(listeners[0], listeners[1]));
 		factory.addContextLifecycleListeners(listeners[2], listeners[3]);
 		this.webServer = factory.getWebServer();
@@ -136,9 +137,7 @@ public class TomcatServletWebServerFactoryTests
 	public void tomcatCustomizers() {
 		TomcatServletWebServerFactory factory = getFactory();
 		TomcatContextCustomizer[] listeners = new TomcatContextCustomizer[4];
-		for (int i = 0; i < listeners.length; i++) {
-			listeners[i] = mock(TomcatContextCustomizer.class);
-		}
+		Arrays.setAll(listeners, (i) -> mock(TomcatContextCustomizer.class));
 		factory.setTomcatContextCustomizers(Arrays.asList(listeners[0], listeners[1]));
 		factory.addContextCustomizers(listeners[2], listeners[3]);
 		this.webServer = factory.getWebServer();
@@ -163,9 +162,7 @@ public class TomcatServletWebServerFactoryTests
 	public void tomcatConnectorCustomizers() {
 		TomcatServletWebServerFactory factory = getFactory();
 		TomcatConnectorCustomizer[] listeners = new TomcatConnectorCustomizer[4];
-		for (int i = 0; i < listeners.length; i++) {
-			listeners[i] = mock(TomcatConnectorCustomizer.class);
-		}
+		Arrays.setAll(listeners, (i) -> mock(TomcatConnectorCustomizer.class));
 		factory.setTomcatConnectorCustomizers(Arrays.asList(listeners[0], listeners[1]));
 		factory.addConnectorCustomizers(listeners[2], listeners[3]);
 		this.webServer = factory.getWebServer();
@@ -179,17 +176,19 @@ public class TomcatServletWebServerFactoryTests
 	public void tomcatAdditionalConnectors() {
 		TomcatServletWebServerFactory factory = getFactory();
 		Connector[] listeners = new Connector[4];
-		for (int i = 0; i < listeners.length; i++) {
-			Connector connector = mock(Connector.class);
-			given(connector.getState()).willReturn(LifecycleState.STOPPED);
-			listeners[i] = connector;
-		}
+		Arrays.setAll(listeners, (i) -> stoppedConnector());
 		factory.addAdditionalTomcatConnectors(listeners);
 		this.webServer = factory.getWebServer();
 		Map<Service, Connector[]> connectors = ((TomcatWebServer) this.webServer)
 				.getServiceConnectors();
 		assertThat(connectors.values().iterator().next().length)
 				.isEqualTo(listeners.length + 1);
+	}
+
+	private Connector stoppedConnector() {
+		Connector connector = mock(Connector.class);
+		given(connector.getState()).willReturn(LifecycleState.STOPPED);
+		return connector;
 	}
 
 	@Test
@@ -377,7 +376,7 @@ public class TomcatServletWebServerFactoryTests
 	}
 
 	@Test
-	public void defaultLocaleCharsetMappingsAreOverriden() {
+	public void defaultLocaleCharsetMappingsAreOverridden() {
 		TomcatServletWebServerFactory factory = getFactory();
 		this.webServer = factory.getWebServer();
 		// override defaults, see org.apache.catalina.util.CharsetMapperDefault.properties
@@ -417,6 +416,31 @@ public class TomcatServletWebServerFactoryTests
 		Set<String> tldSkipSet = (Set<String>) ReflectionTestUtils.getField(jarScanFilter,
 				"tldSkipSet");
 		assertThat(tldSkipSet).contains("foo.jar", "bar.jar");
+	}
+
+	@Test
+	public void customTomcatHttpOnlyCookie() {
+		TomcatServletWebServerFactory factory = getFactory();
+		factory.getSession().getCookie().setHttpOnly(false);
+		this.webServer = factory.getWebServer();
+		this.webServer.start();
+		Tomcat tomcat = ((TomcatWebServer) this.webServer).getTomcat();
+		Context context = (Context) tomcat.getHost().findChildren()[0];
+		assertThat(context.getUseHttpOnly()).isFalse();
+	}
+
+	@Test
+	public void exceptionThrownOnLoadFailureWhenFailCtxIfServletStartFailsIsTrue() {
+		TomcatServletWebServerFactory factory = getFactory();
+		factory.addContextCustomizers((context) -> {
+			if (context instanceof StandardContext) {
+				((StandardContext) context).setFailCtxIfServletStartFails(true);
+			}
+		});
+		this.webServer = factory.getWebServer((context) -> context
+				.addServlet("failing", FailingServlet.class).setLoadOnStartup(0));
+		this.thrown.expect(WebServerException.class);
+		this.webServer.start();
 	}
 
 	@Override
@@ -465,6 +489,15 @@ public class TomcatServletWebServerFactoryTests
 			int blockedPort) {
 		assertThat(ex).isInstanceOf(ConnectorStartFailedException.class);
 		assertThat(((ConnectorStartFailedException) ex).getPort()).isEqualTo(blockedPort);
+	}
+
+	static class FailingServlet extends HttpServlet {
+
+		@Override
+		public void init() throws ServletException {
+			throw new RuntimeException("Init Failure");
+		}
+
 	}
 
 }

@@ -16,12 +16,14 @@
 
 package org.springframework.boot.actuate.endpoint.web.reactive;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.boot.actuate.endpoint.EndpointId;
 import org.springframework.boot.actuate.endpoint.web.EndpointMapping;
 import org.springframework.boot.actuate.endpoint.web.annotation.ControllerEndpoint;
 import org.springframework.boot.actuate.endpoint.web.annotation.ExposableControllerEndpoint;
@@ -98,7 +100,8 @@ public class ControllerEndpointHandlerMappingTests {
 
 	private Object getHandler(ControllerEndpointHandlerMapping mapping, HttpMethod method,
 			String requestURI) {
-		return mapping.getHandler(exchange(method, requestURI)).block();
+		return mapping.getHandler(exchange(method, requestURI))
+				.block(Duration.ofSeconds(30));
 	}
 
 	private ControllerEndpointHandlerMapping createMapping(String prefix,
@@ -121,22 +124,22 @@ public class ControllerEndpointHandlerMappingTests {
 	}
 
 	private ExposableControllerEndpoint firstEndpoint() {
-		return mockEndpoint("first", new FirstTestMvcEndpoint());
+		return mockEndpoint(EndpointId.of("first"), new FirstTestMvcEndpoint());
 	}
 
 	private ExposableControllerEndpoint secondEndpoint() {
-		return mockEndpoint("second", new SecondTestMvcEndpoint());
+		return mockEndpoint(EndpointId.of("second"), new SecondTestMvcEndpoint());
 	}
 
 	private ExposableControllerEndpoint pathlessEndpoint() {
-		return mockEndpoint("pathless", new PathlessControllerEndpoint());
+		return mockEndpoint(EndpointId.of("pathless"), new PathlessControllerEndpoint());
 	}
 
-	private ExposableControllerEndpoint mockEndpoint(String id, Object controller) {
+	private ExposableControllerEndpoint mockEndpoint(EndpointId id, Object controller) {
 		ExposableControllerEndpoint endpoint = mock(ExposableControllerEndpoint.class);
-		given(endpoint.getId()).willReturn(id);
+		given(endpoint.getEndpointId()).willReturn(id);
 		given(endpoint.getController()).willReturn(controller);
-		given(endpoint.getRootPath()).willReturn(id);
+		given(endpoint.getRootPath()).willReturn(id.toString());
 		return endpoint;
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,12 @@ import java.lang.annotation.Target;
  *
  * @author Phillip Webb
  * @since 1.3.0
+ * @deprecated as of 2.0.5
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE })
 @Documented
+@Deprecated
 public @interface UsesUnsafeJava {
 
 }

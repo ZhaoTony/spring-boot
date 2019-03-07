@@ -62,7 +62,6 @@ import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -180,7 +179,7 @@ public class WebMvcAutoConfiguration {
 
 		private final ListableBeanFactory beanFactory;
 
-		private final HttpMessageConverters messageConverters;
+		private final ObjectProvider<HttpMessageConverters> messageConvertersProvider;
 
 		final ResourceHandlerRegistrationCustomizer resourceHandlerRegistrationCustomizer;
 
@@ -188,12 +187,12 @@ public class WebMvcAutoConfiguration {
 
 		public WebMvcAutoConfigurationAdapter(ResourceProperties resourceProperties,
 				WebMvcProperties mvcProperties, ListableBeanFactory beanFactory,
-				@Lazy HttpMessageConverters messageConverters,
+				ObjectProvider<HttpMessageConverters> messageConvertersProvider,
 				ObjectProvider<ResourceHandlerRegistrationCustomizer> resourceHandlerRegistrationCustomizerProvider) {
 			this.resourceProperties = resourceProperties;
 			this.mvcProperties = mvcProperties;
 			this.beanFactory = beanFactory;
-			this.messageConverters = messageConverters;
+			this.messageConvertersProvider = messageConvertersProvider;
 			this.resourceHandlerRegistrationCustomizer = resourceHandlerRegistrationCustomizerProvider
 					.getIfAvailable();
 		}
@@ -205,7 +204,8 @@ public class WebMvcAutoConfiguration {
 
 		@Override
 		public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-			converters.addAll(this.messageConverters.getConverters());
+			this.messageConvertersProvider.ifAvailable((customConverters) -> converters
+					.addAll(customConverters.getConverters()));
 		}
 
 		@Override
@@ -338,7 +338,7 @@ public class WebMvcAutoConfiguration {
 		}
 
 		private Integer getSeconds(Duration cachePeriod) {
-			return (cachePeriod == null ? null : (int) cachePeriod.getSeconds());
+			return (cachePeriod != null) ? (int) cachePeriod.getSeconds() : null;
 		}
 
 		@Bean
@@ -653,7 +653,7 @@ public class WebMvcAutoConfiguration {
 			Object skip = webRequest.getAttribute(SKIP_ATTRIBUTE,
 					RequestAttributes.SCOPE_REQUEST);
 			if (skip != null && Boolean.parseBoolean(skip.toString())) {
-				return Collections.emptyList();
+				return MEDIA_TYPE_ALL_LIST;
 			}
 			return this.delegate.resolveMediaTypes(webRequest);
 		}

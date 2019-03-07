@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.Filter;
 import javax.servlet.MultipartConfigElement;
@@ -78,11 +79,11 @@ public class ServletContextInitializerBeans
 		this.initializers = new LinkedMultiValueMap<>();
 		addServletContextInitializerBeans(beanFactory);
 		addAdaptableBeans(beanFactory);
-		List<ServletContextInitializer> sortedInitializers = new ArrayList<>();
-		this.initializers.values().forEach((contextInitializers) -> {
-			AnnotationAwareOrderComparator.sort(contextInitializers);
-			sortedInitializers.addAll(contextInitializers);
-		});
+		List<ServletContextInitializer> sortedInitializers = this.initializers.values()
+				.stream()
+				.flatMap((value) -> value.stream()
+						.sorted(AnnotationAwareOrderComparator.INSTANCE))
+				.collect(Collectors.toList());
 		this.sortedList = Collections.unmodifiableList(sortedInitializers);
 	}
 
@@ -168,7 +169,7 @@ public class ServletContextInitializerBeans
 	private MultipartConfigElement getMultipartConfig(ListableBeanFactory beanFactory) {
 		List<Entry<String, MultipartConfigElement>> beans = getOrderedBeansOfType(
 				beanFactory, MultipartConfigElement.class);
-		return (beans.isEmpty() ? null : beans.get(0).getValue());
+		return beans.isEmpty() ? null : beans.get(0).getValue();
 	}
 
 	private <T> void addAsRegistrationBean(ListableBeanFactory beanFactory, Class<T> type,
@@ -270,7 +271,7 @@ public class ServletContextInitializerBeans
 		@Override
 		public RegistrationBean createRegistrationBean(String name, Servlet source,
 				int totalNumberOfSourceBeans) {
-			String url = (totalNumberOfSourceBeans == 1 ? "/" : "/" + name + "/");
+			String url = (totalNumberOfSourceBeans != 1) ? "/" + name + "/" : "/";
 			if (name.equals(DISPATCHER_SERVLET_NAME)) {
 				url = "/"; // always map the main dispatcherServlet to "/"
 			}

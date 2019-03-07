@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -350,6 +351,15 @@ public class ConfigurationPropertiesTests {
 		WithPropertyPlaceholderValueProperties bean = this.context
 				.getBean(WithPropertyPlaceholderValueProperties.class);
 		assertThat(bean.getValue()).isEqualTo("foo");
+	}
+
+	@Test
+	public void loadWithPropertyPlaceholderShouldNotAlterPropertySourceOrder() {
+		load(WithPropertyPlaceholderWithLocalPropertiesValueConfiguration.class,
+				"com.example.bar=a");
+		SimplePrefixedProperties bean = this.context
+				.getBean(SimplePrefixedProperties.class);
+		assertThat(bean.getBar()).isEqualTo("a");
 	}
 
 	@Test
@@ -762,6 +772,26 @@ public class ConfigurationPropertiesTests {
 		load(PersonProperties.class, "test=boot");
 	}
 
+	@Test
+	public void loadWhenConfigurationPropertiesContainsMapWithPositiveAndNegativeIntegerKeys() {
+		// gh-14136
+		MutablePropertySources sources = this.context.getEnvironment()
+				.getPropertySources();
+		Map<String, Object> source = new HashMap<>();
+		source.put("test.map.x.[-1].a", "baz");
+		source.put("test.map.x.1.a", "bar");
+		source.put("test.map.x.1.b", 1);
+		sources.addLast(new MapPropertySource("test", source));
+		load(WithIntegerMapProperties.class);
+		WithIntegerMapProperties bean = this.context
+				.getBean(WithIntegerMapProperties.class);
+		Map<Integer, Foo> x = bean.getMap().get("x");
+		assertThat(x.get(-1).getA()).isEqualTo("baz");
+		assertThat(x.get(-1).getB()).isEqualTo(0);
+		assertThat(x.get(1).getA()).isEqualTo("bar");
+		assertThat(x.get(1).getB()).isEqualTo(1);
+	}
+
 	private AnnotationConfigApplicationContext load(Class<?> configuration,
 			String... inlinedProperties) {
 		return load(new Class<?>[] { configuration }, inlinedProperties);
@@ -831,6 +861,7 @@ public class ConfigurationPropertiesTests {
 		public NonValidatedJsr303Properties properties() {
 			return new NonValidatedJsr303Properties();
 		}
+
 	}
 
 	@Configuration
@@ -954,6 +985,21 @@ public class ConfigurationPropertiesTests {
 		@Bean
 		public static PropertySourcesPlaceholderConfigurer configurer() {
 			return new PropertySourcesPlaceholderConfigurer();
+		}
+
+	}
+
+	@Configuration
+	@EnableConfigurationProperties(SimplePrefixedProperties.class)
+	static class WithPropertyPlaceholderWithLocalPropertiesValueConfiguration {
+
+		@Bean
+		public static PropertySourcesPlaceholderConfigurer configurer() {
+			PropertySourcesPlaceholderConfigurer placeholderConfigurer = new PropertySourcesPlaceholderConfigurer();
+			Properties properties = new Properties();
+			properties.put("com.example.bar", "b");
+			placeholderConfigurer.setProperties(properties);
+			return placeholderConfigurer;
 		}
 
 	}
@@ -1374,6 +1420,7 @@ public class ConfigurationPropertiesTests {
 	interface InterfaceForValidatedImplementation {
 
 		String getFoo();
+
 	}
 
 	@ConfigurationProperties("test")
@@ -1514,6 +1561,22 @@ public class ConfigurationPropertiesTests {
 		}
 
 		public void setMap(Map<String, Map<String, String>> map) {
+			this.map = map;
+		}
+
+	}
+
+	@EnableConfigurationProperties
+	@ConfigurationProperties(prefix = "test")
+	static class WithIntegerMapProperties {
+
+		private Map<String, Map<Integer, Foo>> map;
+
+		public Map<String, Map<Integer, Foo>> getMap() {
+			return this.map;
+		}
+
+		public void setMap(Map<String, Map<Integer, Foo>> map) {
 			this.map = map;
 		}
 
@@ -1687,6 +1750,7 @@ public class ConfigurationPropertiesTests {
 			String[] content = StringUtils.split(source, " ");
 			return new Person(content[0], content[1]);
 		}
+
 	}
 
 	static class GenericPersonConverter implements GenericConverter {
@@ -1704,6 +1768,7 @@ public class ConfigurationPropertiesTests {
 			String[] content = StringUtils.split((String) source, " ");
 			return new Person(content[0], content[1]);
 		}
+
 	}
 
 	static class PersonPropertyEditor extends PropertyEditorSupport {
@@ -1725,6 +1790,30 @@ public class ConfigurationPropertiesTests {
 		Person(String firstName, String lastName) {
 			this.firstName = firstName;
 			this.lastName = lastName;
+		}
+
+	}
+
+	static class Foo {
+
+		private String a;
+
+		private int b;
+
+		public String getA() {
+			return this.a;
+		}
+
+		public void setA(String a) {
+			this.a = a;
+		}
+
+		public int getB() {
+			return this.b;
+		}
+
+		public void setB(int b) {
+			this.b = b;
 		}
 
 	}

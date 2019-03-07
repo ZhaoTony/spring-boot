@@ -24,12 +24,9 @@ import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.core.instrument.config.MeterFilterReply;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -49,14 +46,6 @@ public class PropertiesMeterFilterTests {
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
-	@Mock
-	private DistributionStatisticConfig config;
-
-	@Before
-	public void setup() {
-		MockitoAnnotations.initMocks(this);
-	}
-
 	@Test
 	public void createWhenPropertiesIsNullShouldThrowException() {
 		this.thrown.expect(IllegalArgumentException.class);
@@ -67,6 +56,14 @@ public class PropertiesMeterFilterTests {
 	@Test
 	public void acceptWhenHasNoEnabledPropertiesShouldReturnNeutral() {
 		PropertiesMeterFilter filter = new PropertiesMeterFilter(createProperties());
+		assertThat(filter.accept(createMeterId("spring.boot")))
+				.isEqualTo(MeterFilterReply.NEUTRAL);
+	}
+
+	@Test
+	public void acceptWhenHasNoMatchingEnabledPropertyShouldReturnNeutral() {
+		PropertiesMeterFilter filter = new PropertiesMeterFilter(
+				createProperties("enable.something.else=false"));
 		assertThat(filter.accept(createMeterId("spring.boot")))
 				.isEqualTo(MeterFilterReply.NEUTRAL);
 	}

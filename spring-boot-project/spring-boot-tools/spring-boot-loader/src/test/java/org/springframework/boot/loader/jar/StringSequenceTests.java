@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,6 +165,55 @@ public class StringSequenceTests {
 		StringSequence b = new StringSequence("urge");
 		StringSequence c = new StringSequence("urgh");
 		assertThat(a).isEqualTo(b).isNotEqualTo(c);
+	}
+
+	@Test
+	public void notEqualsWhenSequencesOfDifferentLength() {
+		StringSequence a = new StringSequence("abcd");
+		StringSequence b = new StringSequence("ef");
+		assertThat(a).isNotEqualTo(b);
+	}
+
+	@Test
+	public void startsWithWhenExactMatch() {
+		assertThat(new StringSequence("abc").startsWith("abc")).isTrue();
+	}
+
+	@Test
+	public void startsWithWhenLongerAndStartsWith() {
+		assertThat(new StringSequence("abcd").startsWith("abc")).isTrue();
+	}
+
+	@Test
+	public void startsWithWhenLongerAndDoesNotStartWith() {
+		assertThat(new StringSequence("abcd").startsWith("abx")).isFalse();
+	}
+
+	@Test
+	public void startsWithWhenShorterAndDoesNotStartWith() {
+		assertThat(new StringSequence("ab").startsWith("abc")).isFalse();
+		assertThat(new StringSequence("ab").startsWith("c")).isFalse();
+	}
+
+	@Test
+	public void startsWithOffsetWhenExactMatch() {
+		assertThat(new StringSequence("xabc").startsWith("abc", 1)).isTrue();
+	}
+
+	@Test
+	public void startsWithOffsetWhenLongerAndStartsWith() {
+		assertThat(new StringSequence("xabcd").startsWith("abc", 1)).isTrue();
+	}
+
+	@Test
+	public void startsWithOffsetWhenLongerAndDoesNotStartWith() {
+		assertThat(new StringSequence("xabcd").startsWith("abx", 1)).isFalse();
+	}
+
+	@Test
+	public void startsWithOffsetWhenShorterAndDoesNotStartWith() {
+		assertThat(new StringSequence("xab").startsWith("abc", 1)).isFalse();
+		assertThat(new StringSequence("xab").startsWith("c", 1)).isFalse();
 	}
 
 }

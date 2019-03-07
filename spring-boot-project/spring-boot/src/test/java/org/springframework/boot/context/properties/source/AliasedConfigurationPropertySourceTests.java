@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package org.springframework.boot.context.properties.source;
+
+import java.util.Collections;
 
 import org.junit.Test;
 import org.mockito.Answers;
@@ -111,10 +113,20 @@ public class AliasedConfigurationPropertySourceTests {
 				.isEqualTo(ConfigurationPropertyState.PRESENT);
 	}
 
+	@Test
+	public void containsDescendantOfWhenPresentInAliasShouldReturnPresent() {
+		ConfigurationPropertySource source = new MapConfigurationPropertySource(
+				Collections.singletonMap("foo.bar", "foobar"));
+		ConfigurationPropertySource aliased = source
+				.withAliases(new ConfigurationPropertyNameAliases("foo.bar", "baz.foo"));
+		assertThat(aliased.containsDescendantOf(ConfigurationPropertyName.of("baz")))
+				.isEqualTo(ConfigurationPropertyState.PRESENT);
+	}
+
 	private Object getValue(ConfigurationPropertySource source, String name) {
 		ConfigurationProperty property = source
 				.getConfigurationProperty(ConfigurationPropertyName.of(name));
-		return (property == null ? null : property.getValue());
+		return (property != null) ? property.getValue() : null;
 	}
 
 }

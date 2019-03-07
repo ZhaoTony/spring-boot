@@ -30,7 +30,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
@@ -41,6 +40,7 @@ import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
@@ -77,7 +77,7 @@ public class WebServicesAutoConfiguration {
 		MessageDispatcherServlet servlet = new MessageDispatcherServlet();
 		servlet.setApplicationContext(applicationContext);
 		String path = this.properties.getPath();
-		String urlMapping = (path.endsWith("/") ? path + "*" : path + "/*");
+		String urlMapping = path.endsWith("/") ? path + "*" : path + "/*";
 		ServletRegistrationBean<MessageDispatcherServlet> registration = new ServletRegistrationBean<>(
 				servlet, urlMapping);
 		WebServicesProperties.Servlet servletProperties = this.properties.getServlet();
@@ -87,7 +87,7 @@ public class WebServicesAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "spring.webservices", name = "wsdl-locations")
+	@Conditional(OnWsdlLocationsCondition.class)
 	public static WsdlDefinitionBeanFactoryPostProcessor wsdlDefinitionBeanFactoryPostProcessor() {
 		return new WsdlDefinitionBeanFactoryPostProcessor();
 	}
@@ -146,13 +146,13 @@ public class WebServicesAutoConfiguration {
 				return this.applicationContext
 						.getResources(ensureTrailingSlash(location) + pattern);
 			}
-			catch (IOException e) {
+			catch (IOException ex) {
 				return new Resource[0];
 			}
 		}
 
 		private String ensureTrailingSlash(String path) {
-			return (path.endsWith("/") ? path : path + "/");
+			return path.endsWith("/") ? path : path + "/";
 		}
 
 	}

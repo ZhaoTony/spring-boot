@@ -91,7 +91,8 @@ abstract class AggregateBinder<T> {
 
 	/**
 	 * Internal class used to supply the aggregate and cache the value.
-	 * @param <T> The aggregate type
+	 *
+	 * @param <T> the aggregate type
 	 */
 	protected static class AggregateSupplier<T> {
 
