@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLHandshakeException;
 
 import io.undertow.Undertow.Builder;
 import io.undertow.servlet.api.DeploymentInfo;
@@ -209,8 +208,8 @@ public class UndertowServletWebServerFactoryTests
 
 	@Test
 	public void sslRestrictedProtocolsEmptyCipherFailure() throws Exception {
-		this.thrown.expect(anyOf(instanceOf(SSLHandshakeException.class),
-				instanceOf(SocketException.class)));
+		this.thrown.expect(
+				anyOf(instanceOf(SSLException.class), instanceOf(SocketException.class)));
 		testRestrictedSSLProtocolsAndCipherSuites(new String[] { "TLSv1.2" },
 				new String[] { "TLS_EMPTY_RENEGOTIATION_INFO_SCSV" });
 	}

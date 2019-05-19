@@ -1,11 +1,11 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -297,7 +297,8 @@ public class ConditionalOnPropertyTests {
 
 	@Configuration
 	// i.e ${simple.myProperty:true}
-	@ConditionalOnProperty(prefix = "simple", name = "my-property", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "simple", name = "my-property", havingValue = "true",
+			matchIfMissing = true)
 	static class EnabledIfNotConfiguredOtherwiseConfig {
 
 		@Bean
@@ -309,7 +310,8 @@ public class ConditionalOnPropertyTests {
 
 	@Configuration
 	// i.e ${simple.myProperty:false}
-	@ConditionalOnProperty(prefix = "simple", name = "my-property", havingValue = "true", matchIfMissing = false)
+	@ConditionalOnProperty(prefix = "simple", name = "my-property", havingValue = "true",
+			matchIfMissing = false)
 	static class DisabledIfNotConfiguredOtherwiseConfig {
 
 		@Bean
@@ -331,7 +333,8 @@ public class ConditionalOnPropertyTests {
 	}
 
 	@Configuration
-	@ConditionalOnProperty(name = "simple.myProperty", havingValue = "bar", matchIfMissing = true)
+	@ConditionalOnProperty(name = "simple.myProperty", havingValue = "bar",
+			matchIfMissing = true)
 	static class DefaultValueConfig {
 
 		@Bean
@@ -353,8 +356,8 @@ public class ConditionalOnPropertyTests {
 	}
 
 	@Configuration
-	@ConditionalOnProperty(prefix = "simple", name = { "my-property",
-			"my-another-property" }, havingValue = "bar")
+	@ConditionalOnProperty(prefix = "simple",
+			name = { "my-property", "my-another-property" }, havingValue = "bar")
 	static class MultiValuesConfig {
 
 		@Bean
@@ -410,7 +413,8 @@ public class ConditionalOnPropertyTests {
 
 	@Configuration
 	@ConditionalOnMyFeature
-	@ConditionalOnProperty(prefix = "my.other.feature", name = "enabled", havingValue = "true", matchIfMissing = false)
+	@ConditionalOnProperty(prefix = "my.other.feature", name = "enabled",
+			havingValue = "true", matchIfMissing = false)
 	protected static class MetaAnnotationAndDirectAnnotation {
 
 		@Bean
@@ -422,7 +426,8 @@ public class ConditionalOnPropertyTests {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE, ElementType.METHOD })
-	@ConditionalOnProperty(prefix = "my.feature", name = "enabled", havingValue = "true", matchIfMissing = false)
+	@ConditionalOnProperty(prefix = "my.feature", name = "enabled", havingValue = "true",
+			matchIfMissing = false)
 	public @interface ConditionalOnMyFeature {
 
 	}
